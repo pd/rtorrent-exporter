@@ -54,6 +54,7 @@ type DownloadsCollector struct {
 	DownloadTotalBytes *prometheus.Desc
 	UploadRateBytes    *prometheus.Desc
 	UploadTotalBytes   *prometheus.Desc
+	SizeBytes          *prometheus.Desc
 
 	// Download messages, these are the messages that come from the tracker
 	DownloadMessages *prometheus.Desc
@@ -75,7 +76,7 @@ type CollectorOpts struct {
 var (
 	hashOnlyCommand       = []string{"d.hash="}
 	defaultActiveCommands = []string{"d.hash=", "d.base_filename=", "d.down.rate=", "d.down.total=", "d.up.rate=", "d.up.total=",
-		"d.message="}
+		"d.message=", "d.size_bytes="}
 )
 
 // Verify that DownloadsCollector implements the prometheus.Collector interface.
@@ -186,6 +187,13 @@ func NewDownloadsCollector(ds DownloadsSource, collectorOpts CollectorOpts) *Dow
 		downCollector.UploadTotalBytes = prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, subsystem, "upload_total_bytes"),
 			"Total Bytes uploaded.",
+			labels,
+			nil,
+		)
+
+		downCollector.SizeBytes = prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, subsystem, "size_bytes"),
+			"Size of the torrent in bytes.",
 			labels,
 			nil,
 		)
@@ -423,6 +431,17 @@ func (c *DownloadsCollector) parseDownloadDetailsMetrics(a []any, cmds []string,
 				c.UploadTotalBytes,
 				prometheus.GaugeValue,
 				float64(upTotal),
+				labels...,
+			)
+		case "d.size_bytes=":
+			size, ok := v.(int64)
+			if !ok {
+				return errorMessage, fmt.Errorf("failed to convert Size Bytes")
+			}
+			ch <- prometheus.MustNewConstMetric(
+				c.SizeBytes,
+				prometheus.GaugeValue,
+				float64(size),
 				labels...,
 			)
 		case "d.message=":

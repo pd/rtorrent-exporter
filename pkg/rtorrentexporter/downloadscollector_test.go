@@ -126,7 +126,7 @@ func TestDownloadsCollector_collectDownloadCounts(t *testing.T) {
 
 func TestDownloadsCollector_collectDownloadDetails(t *testing.T) {
 	ds := new(MockDownloadsSource)
-	cmds := []string{"d.hash=", "d.base_filename=", "d.down.rate=", "d.down.total=", "d.up.rate=", "d.up.total=", "d.message="}
+	cmds := []string{"d.hash=", "d.base_filename=", "d.down.rate=", "d.down.total=", "d.up.rate=", "d.up.total=", "d.message=", "d.size_bytes="}
 	ds.On("DownloadWithDetails", cmds).Return([][]any{
 		{"hash1", "name1", int64(100), int64(200), int64(300), int64(400), nil},
 	}, nil)
